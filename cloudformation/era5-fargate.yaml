@@ -19,12 +19,12 @@ Parameters:
   DaskWorkerGitHubOrg:
     Type: String
     Description: GitHub organization for Dask Worker repository
-    Default: zflamig
+    Default: zacharyDez
 
   DaskWorkerGitSourceBranch:
     Type: String
     Description: GitHub Repository Branch for Dask workers
-    Default: master
+    Default: main
 
   CodeBuildDockerImage:
     Type: String
@@ -44,8 +44,8 @@ Resources:
     DependsOn: CleanBucketOnDeleteLambda
     Type: Custom::CleanBucket
     Properties:
-      ServiceToken: 
-        Fn::GetAtt: 
+      ServiceToken:
+        Fn::GetAtt:
           - "CleanBucketOnDeleteLambda"
           - "Arn"
       BucketName: !Ref CodePipelineArtifactBucket
@@ -54,41 +54,41 @@ Resources:
     DependsOn: CodePipelineArtifactBucket
     Type: "AWS::Lambda::Function"
     Properties:
-      Code: 
-        ZipFile: 
+      Code:
+        ZipFile:
           !Sub |
-            import json, boto3, logging
-            import cfnresponse
-            logger = logging.getLogger()
-            logger.setLevel(logging.INFO)
-    
-            def lambda_handler(event, context):
-                logger.info("event: {}".format(event))
-                try:
-                    bucket = event['ResourceProperties']['BucketName']
-                    logger.info("bucket: {}, event['RequestType']: {}".format(bucket,event['RequestType']))
-                    if event['RequestType'] == 'Delete':
-                        s3 = boto3.resource('s3')
-                        bucket = s3.Bucket(bucket)
-                        for obj in bucket.objects.filter():
-                            logger.info("delete obj: {}".format(obj))
-                            s3.Object(bucket.name, obj.key).delete()
-    
-                    sendResponseCfn(event, context, cfnresponse.SUCCESS)
-                except Exception as e:
-                    logger.info("Exception: {}".format(e))
-                    sendResponseCfn(event, context, cfnresponse.FAILED)
-    
-            def sendResponseCfn(event, context, responseStatus):
-                responseData = {}
-                responseData['Data'] = {}
-                cfnresponse.send(event, context, responseStatus, responseData, "CustomResourcePhysicalID")            
-    
+          import json, boto3, logging
+          import cfnresponse
+          logger = logging.getLogger()
+          logger.setLevel(logging.INFO)
+          
+          def lambda_handler(event, context):
+              logger.info("event: {}".format(event))
+              try:
+                  bucket = event['ResourceProperties']['BucketName']
+                  logger.info("bucket: {}, event['RequestType']: {}".format(bucket,event['RequestType']))
+                  if event['RequestType'] == 'Delete':
+                      s3 = boto3.resource('s3')
+                      bucket = s3.Bucket(bucket)
+                      for obj in bucket.objects.filter():
+                          logger.info("delete obj: {}".format(obj))
+                          s3.Object(bucket.name, obj.key).delete()
+          
+                  sendResponseCfn(event, context, cfnresponse.SUCCESS)
+              except Exception as e:
+                  logger.info("Exception: {}".format(e))
+                  sendResponseCfn(event, context, cfnresponse.FAILED)
+          
+          def sendResponseCfn(event, context, responseStatus):
+              responseData = {}
+              responseData['Data'] = {}
+              cfnresponse.send(event, context, responseStatus, responseData, "CustomResourcePhysicalID")            
+
       Handler: "index.lambda_handler"
       Runtime: python3.7
       MemorySize: 128
       Timeout: 60
-      Role : !GetAtt CleanBucketOnDeleteLambdaRole.Arn
+      Role: !GetAtt CleanBucketOnDeleteLambdaRole.Arn
 
   CleanBucketOnDeleteLambdaRole:
     Type: AWS::IAM::Role
@@ -96,38 +96,38 @@ Resources:
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
-        - Effect: Allow
-          Principal:
-            Service:
-            - lambda.amazonaws.com
-          Action:
-          - sts:AssumeRole
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
       Path: "/"
       Policies:
-      - PolicyName: !Join [-, [!Ref 'AWS::StackName', 'CleanBucketOnDeleteLambdaPolicy'] ]
-        PolicyDocument:
-          Version: '2012-10-17'
-          Statement:
-          - Effect: Allow
-            Action:
-            - s3:ListBucket
-            - s3:DeleteObject
-            Resource:
-            - !GetAtt CodePipelineArtifactBucket.Arn
-            - !Join
-              - "/"
-              - - !GetAtt CodePipelineArtifactBucket.Arn
-                - "*"
-          - Effect: Deny
-            Action:
-            - s3:DeleteBucket
-            Resource: '*'
-          # - Effect: Allow
-          #   Action:
-          #   - logs:CreateLogGroup
-          #   - logs:CreateLogStream
-          #   - logs:PutLogEvents
-          #   Resource: '*'
+        - PolicyName: !Join [ -, [ !Ref 'AWS::StackName', 'CleanBucketOnDeleteLambdaPolicy' ] ]
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:DeleteObject
+                Resource:
+                  - !GetAtt CodePipelineArtifactBucket.Arn
+                  - !Join
+                    - "/"
+                    - - !GetAtt CodePipelineArtifactBucket.Arn
+                      - "*"
+              - Effect: Deny
+                Action:
+                  - s3:DeleteBucket
+                Resource: '*'
+            # - Effect: Allow
+            #   Action:
+            #   - logs:CreateLogGroup
+            #   - logs:CreateLogStream
+            #   - logs:PutLogEvents
+            #   Resource: '*'
 
   CodeBuildServiceRole:
     Type: AWS::IAM::Role
@@ -192,7 +192,7 @@ Resources:
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
 
-                  # By default, the build specification is defined in this template, but you can also add buildspec.yml
+    # By default, the build specification is defined in this template, but you can also add buildspec.yml
   # files in your repos to allow for customization.
   # See:
   # https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html
@@ -365,8 +365,8 @@ Resources:
     DependsOn: CleanECROnDeleteLambda
     Type: Custom::CleanECR
     Properties:
-      ServiceToken: 
-        Fn::GetAtt: 
+      ServiceToken:
+        Fn::GetAtt:
           - "CleanECROnDeleteLambda"
           - "Arn"
       RepositoryName: !Ref EcrDockerRepository
@@ -375,43 +375,43 @@ Resources:
     DependsOn: EcrDockerRepository
     Type: "AWS::Lambda::Function"
     Properties:
-      Code: 
-        ZipFile: 
+      Code:
+        ZipFile:
           !Sub |
-            import json, boto3, logging
-            import cfnresponse
-            logger = logging.getLogger()
-            logger.setLevel(logging.INFO)
-    
-            def lambda_handler(event, context):
-                logger.info("event: {}".format(event))
-                try:
-                    repo = event['ResourceProperties']['RepositoryName']
-                    logger.info("bucket: {}, event['RequestType']: {}".format(repo,event['RequestType']))
-                    if event['RequestType'] == 'Delete':
-                        client = boto3.client('ecr')
-                        resp = client.list_images(repositoryName=repo)
-                        if 'imageIds' in resp:
-                          images = resp['imageIds']
-                          image_ids = [imageDigest for imageDigest in images]
-                          if len(image_ids) > 0:
-                            client.batch_delete_image(repositoryName=repo, imageIds=image_ids)
-    
-                    sendResponseCfn(event, context, cfnresponse.SUCCESS)
-                except Exception as e:
-                    logger.info("Exception: {}".format(e))
-                    sendResponseCfn(event, context, cfnresponse.FAILED)
-    
-            def sendResponseCfn(event, context, responseStatus):
-                responseData = {}
-                responseData['Data'] = {}
-                cfnresponse.send(event, context, responseStatus, responseData, "CustomResourcePhysicalID")            
-    
+          import json, boto3, logging
+          import cfnresponse
+          logger = logging.getLogger()
+          logger.setLevel(logging.INFO)
+          
+          def lambda_handler(event, context):
+              logger.info("event: {}".format(event))
+              try:
+                  repo = event['ResourceProperties']['RepositoryName']
+                  logger.info("bucket: {}, event['RequestType']: {}".format(repo,event['RequestType']))
+                  if event['RequestType'] == 'Delete':
+                      client = boto3.client('ecr')
+                      resp = client.list_images(repositoryName=repo)
+                      if 'imageIds' in resp:
+                        images = resp['imageIds']
+                        image_ids = [imageDigest for imageDigest in images]
+                        if len(image_ids) > 0:
+                          client.batch_delete_image(repositoryName=repo, imageIds=image_ids)
+          
+                  sendResponseCfn(event, context, cfnresponse.SUCCESS)
+              except Exception as e:
+                  logger.info("Exception: {}".format(e))
+                  sendResponseCfn(event, context, cfnresponse.FAILED)
+          
+          def sendResponseCfn(event, context, responseStatus):
+              responseData = {}
+              responseData['Data'] = {}
+              cfnresponse.send(event, context, responseStatus, responseData, "CustomResourcePhysicalID")            
+
       Handler: "index.lambda_handler"
       Runtime: python3.7
       MemorySize: 128
       Timeout: 60
-      Role : !GetAtt CleanECROnDeleteLambdaRole.Arn
+      Role: !GetAtt CleanECROnDeleteLambdaRole.Arn
 
   CleanECROnDeleteLambdaRole:
     Type: AWS::IAM::Role
@@ -419,29 +419,29 @@ Resources:
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
-        - Effect: Allow
-          Principal:
-            Service:
-            - lambda.amazonaws.com
-          Action:
-          - sts:AssumeRole
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
       Path: "/"
       Policies:
-      - PolicyName: !Join [ -, [!Ref 'AWS::StackName', 'CleanECROnDeleteLambdaPolicy'] ]
-        PolicyDocument:
-          Version: '2012-10-17'
-          Statement:
-          - Effect: Allow
-            Action:
-              - ecr:ListImages
-              - ecr:batchDeleteImage
-            Resource: !GetAtt EcrDockerRepository.Arn
-          # - Effect: Allow
-          #   Action:
-          #   - logs:CreateLogGroup
-          #   - logs:CreateLogStream
-          #   - logs:PutLogEvents
-          #   Resource: '*'
+        - PolicyName: !Join [ -, [ !Ref 'AWS::StackName', 'CleanECROnDeleteLambdaPolicy' ] ]
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ecr:ListImages
+                  - ecr:batchDeleteImage
+                Resource: !GetAtt EcrDockerRepository.Arn
+            # - Effect: Allow
+            #   Action:
+            #   - logs:CreateLogGroup
+            #   - logs:CreateLogStream
+            #   - logs:PutLogEvents
+            #   Resource: '*'
 
   DaskVpc:
     Type: AWS::EC2::VPC
@@ -568,7 +568,7 @@ Resources:
   DaskCluster:
     Type: AWS::ECS::Cluster
     Properties:
-      ClusterName: !Join ["-", [!Ref "AWS::StackName", "Fargate-Dask-Cluster"]]
+      ClusterName: !Join [ "-", [ !Ref "AWS::StackName", "Fargate-Dask-Cluster" ] ]
   DaskClusterPrivateNS:
     Type: AWS::ServiceDiscovery::PrivateDnsNamespace
     Properties:
@@ -584,7 +584,7 @@ Resources:
           Cpu: 4096
           Essential: true
           Image: daskdev/dask:2.9.2
-          LogConfiguration: 
+          LogConfiguration:
             LogDriver: awslogs
             Options:
               awslogs-group:
@@ -779,30 +779,30 @@ Resources:
   NotebookLifecycleConfig:
     Type: AWS::SageMaker::NotebookInstanceLifecycleConfig
     Properties:
-        OnCreate:
+      OnCreate:
         - Content:
             Fn::Base64: |
-                #!/bin/sh
-
-                set -e
-                cat > /home/ec2-user/setup.sh << EOF
-                #!/bin/bash
-                sleep 10
-                echo "Creating daskpy3 conda environment"
-                conda create --name daskpy3 python="3.7.9" -y
-                source activate daskpy3
-                conda install -c conda basemap proj4 -y 
-                pip install zarr==2.3.2 rechunker==0.3.2 ipykernel boto3 dask==2.19.0 distributed==2.19.0 tornado==6.0.4 cloudpickle==1.4.1 msgpack==0.6.2 blosc==1.8.1 numpy==1.17.3 lz4==3.0.2 netcdf4==1.5.3 xarray==0.16.2 bokeh==2.1.1 s3fs==0.4.2 fsspec==0.7.4 h5netcdf==0.8.0 h5py==2.10.0
-                python -m ipykernel install --user --name daskpy3 --display-name "conda_daskpy3"
-                echo "Updating Jupyter config options"
-                sed -i.bak 's/^#c.NotebookApp.iopub_data_rate_limit.*$/c.NotebookApp.iopub_data_rate_limit = 1.0e10/' ~/.jupyter/jupyter_notebook_config.py
-                echo "Finished!"
-                EOF
-            
-                chown ec2-user:ec2-user /home/ec2-user/setup.sh
-                chmod +x /home/ec2-user/setup.sh
-
-                sudo -u ec2-user -i nohup /home/ec2-user/setup.sh >/home/ec2-user/output.log 2>&1 &
+              #!/bin/sh
+              
+              set -e
+              cat > /home/ec2-user/setup.sh << EOF
+              #!/bin/bash
+              sleep 10
+              echo "Creating daskpy3 conda environment"
+              conda create --name daskpy3 python="3.7.9" -y
+              source activate daskpy3
+              conda install -c conda basemap proj4 -y 
+              pip install zarr==2.3.2 rechunker==0.3.2 ipykernel boto3 dask==2.19.0 distributed==2.19.0 tornado==6.0.4 cloudpickle==1.4.1 msgpack==0.6.2 blosc==1.8.1 numpy==1.17.3 lz4==3.0.2 netcdf4==1.5.3 xarray==0.16.2 bokeh==2.1.1 s3fs==0.4.2 fsspec==0.7.4 h5netcdf==0.8.0 h5py==2.10.0
+              python -m ipykernel install --user --name daskpy3 --display-name "conda_daskpy3"
+              echo "Updating Jupyter config options"
+              sed -i.bak 's/^#c.NotebookApp.iopub_data_rate_limit.*$/c.NotebookApp.iopub_data_rate_limit = 1.0e10/' ~/.jupyter/jupyter_notebook_config.py
+              echo "Finished!"
+              EOF
+              
+              chown ec2-user:ec2-user /home/ec2-user/setup.sh
+              chmod +x /home/ec2-user/setup.sh
+              
+              sudo -u ec2-user -i nohup /home/ec2-user/setup.sh >/home/ec2-user/output.log 2>&1 &
 
   DaskNotebook:
     Type: AWS::SageMaker::NotebookInstance
@@ -815,7 +815,7 @@ Resources:
       DefaultCodeRepository: !Ref SagemakerCodeRepo
       DirectInternetAccess: Enabled
       NotebookInstanceName: DaskNotebook
-      LifecycleConfigName:  !GetAtt NotebookLifecycleConfig.NotebookInstanceLifecycleConfigName
+      LifecycleConfigName: !GetAtt NotebookLifecycleConfig.NotebookInstanceLifecycleConfigName
       RootAccess: Enabled
       SecurityGroupIds:
         - Fn::GetAtt:
@@ -827,7 +827,7 @@ Resources:
 
 Outputs:
   JupyterNotebook:
-      Value: !Join
+    Value: !Join
       - ''
       - - https://
         - !Ref 'AWS::Region'
